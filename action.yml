@@ -1,0 +1,78 @@
+name: Independent Action Certification
+description: Read-only independent verification of a pinned GitHub engineering Action and its exact candidate admission.
+inputs:
+  scenario:
+    description: inspect or admission
+    required: false
+    default: inspect
+  repository:
+    description: Existing isolated fixture repository, in OWNER/REPO form.
+    required: true
+  implementation-sha:
+    description: Immutable 40-character commit SHA of the Action under test.
+    required: true
+  base-sha:
+    description: Original canonical SHA; required for admission.
+    required: false
+    default: ""
+  candidate-sha:
+    description: Admitted candidate SHA; required for admission.
+    required: false
+    default: ""
+  pr-number:
+    description: Candidate PR number; required for admission.
+    required: false
+    default: ""
+  validation-run-id:
+    description: Exact successful candidate-validation workflow run ID.
+    required: false
+    default: ""
+  qualification-file:
+    description: Downloaded qualification.json to verify.
+    required: false
+    default: ""
+  bundle-file:
+    description: Downloaded Sigstore qualification bundle.
+    required: false
+    default: ""
+  token:
+    description: GitHub read-only token for fixture repository.
+    required: true
+outputs:
+  result:
+    description: OBSERVED or ADMISSION_VERIFIED, never an unearned broad PASS.
+    value: ${{ steps.certification.outputs.result }}
+  report-path:
+    description: Absolute path of machine-readable independent verification evidence.
+    value: ${{ steps.certification.outputs.report }}
+runs:
+  using: composite
+  steps:
+    - name: Install pinned Nix for Cosign when verifying admission
+      if: ${{ inputs.scenario == 'admission' }}
+      uses: DeterminateSystems/determinate-nix-action@e9bfc9148566ca239aef4f5cb968674de15c3c20 # v3.5.2
+    - id: certification
+      name: Verify authoritative GitHub state
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        TEST_SCENARIO: ${{ inputs.scenario }}
+        TEST_REPOSITORY: ${{ inputs.repository }}
+        TEST_IMPLEMENTATION_SHA: ${{ inputs.implementation-sha }}
+        TEST_BASE_SHA: ${{ inputs.base-sha }}
+        TEST_CANDIDATE_SHA: ${{ inputs.candidate-sha }}
+        TEST_PR_NUMBER: ${{ inputs.pr-number }}
+        TEST_VALIDATION_RUN_ID: ${{ inputs.validation-run-id }}
+        TEST_QUALIFICATION_FILE: ${{ inputs.qualification-file }}
+        TEST_BUNDLE_FILE: ${{ inputs.bundle-file }}
+      run: |
+        set -euo pipefail
+        report="$RUNNER_TEMP/test-suite-certification.json"
+        python3 "$GITHUB_ACTION_PATH/scripts/certify.py" --scenario "$TEST_SCENARIO" \
+          --repository "$TEST_REPOSITORY" --implementation-sha "$TEST_IMPLEMENTATION_SHA" \
+          --base-sha "$TEST_BASE_SHA" --candidate-sha "$TEST_CANDIDATE_SHA" \
+          --pr-number "$TEST_PR_NUMBER" --validation-run-id "$TEST_VALIDATION_RUN_ID" \
+          --qualification-file "$TEST_QUALIFICATION_FILE" --bundle-file "$TEST_BUNDLE_FILE" \
+          --report "$report"
+        echo "result=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["result"])' "$report")" }} "$GITHUB_OUTPUT"
+        echo "report=$report" }} "$GITHUB_OUTPUT"

@@ -1,0 +1,31 @@
+name: validate
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: testing-suite-validate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit:
+    name: unit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Compile and run direct entrypoint tests
+        run: |
+          python3 -m compileall -q scripts tests
+          python3 -m unittest discover -s tests -v
+      - name: Install pinned Nix
+        uses: DeterminateSystems/determinate-nix-action@e9bfc9148566ca239aef4f5cb968674de15c3c20 # v3.5.2
+      - name: Validate through the canonical Dagger interface
+        run: nix develop --no-write-lock-file --command dagger call validate

@@ -1,0 +1,5 @@
+{
+  "name": "testing-suite",
+  "sdk": {"source": "go"},
+  "source": "dagger"
+}

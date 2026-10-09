@@ -1,0 +1,5 @@
+{
+  "name": "validation",
+  "sdk": {"source": "go"},
+  "source": "dagger"
+}

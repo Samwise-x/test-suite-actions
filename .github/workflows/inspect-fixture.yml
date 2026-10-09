@@ -1,0 +1,31 @@
+name: inspect-fixture
+on:
+  workflow_dispatch:
+    inputs:
+      fixture_repository:
+        description: Existing isolated public GitHub fixture (OWNER/REPO).
+        required: true
+        type: string
+      implementation_sha:
+        description: Exact immutable Action distribution commit SHA.
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Read-only independent fixture observation
+        uses: ./
+        with:
+          scenario: inspect
+          repository: ${{ inputs.fixture_repository }}
+          implementation-sha: ${{ inputs.implementation_sha }}
+          token: ${{ github.token }}
