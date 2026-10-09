@@ -104,7 +104,7 @@ class CertificationTest(unittest.TestCase):
 
     def test_inspection_rejects_floating_reference_even_beside_correct_pin(self):
         path = "/contents/" + certify.EXPECTED_WORKFLOWS[0] + "?ref=main"
-        value = "uses: Samwise-x/opencode-actions@" + IMPLEMENTATION + "\\nuses: Samwise-x/opencode-actions@main\\n"
+        value = "uses: Samwise-x/opencode-actions@" + IMPLEMENTATION + "\nuses: Samwise-x/opencode-actions@main\n"
         self.records[path]["content"] = base64.b64encode(value.encode()).decode()
         with self.assertRaisesRegex(certify.EvidenceError, "pin"):
             certify.inspect(REPO, IMPLEMENTATION, self.get)
