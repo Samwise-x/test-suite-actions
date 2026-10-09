@@ -110,7 +110,7 @@ class CertificationTest(unittest.TestCase):
 
     def test_rejects_moved_canonical(self):
         self.records["/git/ref/heads/main"]["object"]["sha"] = BASE
-        with self.assertRaisesRegex(certify.EvidenceError, "canonical"):
+        with self.assertRaisesRegex(certify.EvidenceError, "main"):
             self.verification()
 
     def test_rejects_wrong_workflow_and_failed_checks(self):
@@ -137,6 +137,7 @@ class CertificationTest(unittest.TestCase):
 
     def test_rejects_missing_jobs_and_non_descendant_candidate(self):
         self.records["/actions/runs/456/jobs?per_page=100"]["jobs"].pop()
+        self.records["/actions/runs/456/jobs?per_page=100"]["total_count"] = 1
         with self.assertRaisesRegex(certify.EvidenceError, "security"):
             self.verification()
         self.records = fake_responses()
