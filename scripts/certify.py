@@ -78,7 +78,7 @@ def inspect(repository: str, implementation_sha: str, get: Callable[[str, str], 
             contents = base64.b64decode(body["content"], validate=False).decode("utf-8")
         except (KeyError, UnicodeDecodeError, ValueError) as exc:
             raise EvidenceError("workflow source could not be decoded: " + filename) from exc
-        references = re.findall(r"uses:\s*Samwise-x/opencode-actions(?:/[\w-]+)?@([0-9a-f]{40}|__IMPLEMENTATION_SHA__)", contents)
+        references = re.findall(r"uses:\s*Samwise-x/opencode-actions(?:/[\w-]+)?@([^\s#]+)", contents)
         require(bool(references), "workflow missing pinned self-action: " + filename)
         require(all(ref == implementation_sha for ref in references), "incorrect or unresolved self-action pin: " + filename)
         observed.append(filename)
